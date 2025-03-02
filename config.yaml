@@ -1,0 +1,10 @@
+telegram:
+  chat_ids:
+    - "186825616"
+  delay_seconds: 1
+
+news:
+  query_list:
+    - "컴투스 | 엑스플라 | XPLA | 컴투스홀딩스 | 소울스트라이크 | 컴투스플랫폼"
+  time_window_hours: 24
+  pull_interval_seconds: 120
