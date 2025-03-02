@@ -84,7 +84,7 @@ func main() {
 		log.Fatalf("설정 파일 읽기 실패: %v", err)
 	}
 	var config Config
-	err = v.Unmarshal(config, func(config *mapstructure.DecoderConfig) {
+	err = v.Unmarshal(&config, func(config *mapstructure.DecoderConfig) {
 		config.ErrorUnused = true
 		config.ErrorUnset = true
 	})
@@ -143,6 +143,6 @@ func main() {
 		saveNews(combinedNews)
 		log.Printf("마지막 갱신: %d", time.Now().Unix())
 		// 2분 대기
-		time.Sleep(time.Duration(config.News.PullingIntervalSeconds) * time.Second)
+		time.Sleep(time.Duration(config.News.PullIntervalSeconds) * time.Second)
 	}
 }
