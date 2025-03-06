@@ -52,12 +52,12 @@ func filterNewNews(oldNews, fetchedNews []NewsItem) []NewsItem {
 }
 
 func main() {
-	logFile, err := os.OpenFile("dandok.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("로그 파일 열기 실패: %v", err)
-	}
-	log.SetOutput(logFile)
-	defer logFile.Close()
+	//logFile, err := os.OpenFile("dandok.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	//if err != nil {
+	//	log.Fatalf("로그 파일 열기 실패: %v", err)
+	//}
+	//log.SetOutput(logFile)
+	//defer logFile.Close()
 	if err := godotenv.Load(); err != nil {
 		log.Println("경고: .env 파일을 로드하지 못했습니다. 환경변수는 시스템 설정을 따릅니다.")
 	}
