@@ -11,6 +11,8 @@ RUN ls .
 RUN go mod download
 RUN go build -o /app/bin/mikanewsbot
 RUN cp config.yaml /app/bin/config.toml
+RUN touch .env
+RUN cp .env /app/bin/.env
 
 WORKDIR /app/bin
 ENTRYPOINT ["/app/bin/mikanewsbot"]
