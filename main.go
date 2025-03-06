@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const oldNewsFile = "old_dandok_list.json"
+const oldNewsFile = "data/old_dandok_list.json"
 
 func loadOldNews() []NewsItem {
 	var oldNews []NewsItem

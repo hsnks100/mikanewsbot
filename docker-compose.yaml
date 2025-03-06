@@ -1,0 +1,14 @@
+# docker-compose
+version: "3.4"
+services:
+  liveflow:
+    image: newbot:latest
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    volumes:
+      - "./data:/app/bin/data"
+    environment:
+      DOCKER_MODE: "true"
+    build:
+      context: ./
+      dockerfile: Dockerfile
