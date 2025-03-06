@@ -10,7 +10,7 @@ WORKDIR /app
 RUN ls .
 RUN go mod download
 RUN go build -o /app/bin/mikanewsbot
-RUN cp config.yaml /app/bin/config.toml
+RUN cp config.yaml /app/bin/config.yaml
 RUN touch .env
 RUN cp .env /app/bin/.env
 
