@@ -3,7 +3,10 @@
 FROM golang:1.21-bullseye
 RUN apt-get update
 RUN apt-get upgrade -y
-RUN apt-get install -y build-essential git pkg-config libunistring-dev libaom-dev libdav1d-dev bzip2 nasm wget yasm ca-certificates
+RUN apt-get install -y build-essential git pkg-config libunistring-dev libaom-dev libdav1d-dev bzip2 nasm wget yasm ca-certificates tzdata
+
+RUN ln -fs /usr/share/zoneinfo/Asia/Seoul /etc/localtime && \
+    dpkg-reconfigure --frontend noninteractive tzdata
 ENV PATH="/usr/local/go/bin:${PATH}"
 COPY ./ /app
 WORKDIR /app
