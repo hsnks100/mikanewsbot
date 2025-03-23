@@ -13,6 +13,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
+
+	"github.com/hsnks100/mikanewsbot/sheet"
 )
 
 const oldNewsFile = "data/old_dandok_list.json"
@@ -72,6 +74,10 @@ func main() {
 	botToken := os.Getenv("BOT_TOKEN")
 	if botToken == "" {
 		log.Fatal("BOT_TOKEN 환경변수가 설정되어 있지 않습니다.")
+	}
+	newsSpreadSheetID := os.Getenv("NEWS_SPREADSHEET_ID")
+	if newsSpreadSheetID == "" {
+		log.Fatal("NEWS_SPREADSHEET_ID 환경변수가 설정되어 있지 않습니다.")
 	}
 	v := viper.New()
 	v.SetConfigType("yaml")
@@ -137,6 +143,12 @@ func main() {
 			text := fmt.Sprintf("%s\n%s\n\n%s\n\n<a href=\"%s\">기사 링크</a>",
 				news.PubDate, news.Title, news.Description, news.Link)
 			notifier.SendMessage(text)
+			sheet.InsertNews(newsSpreadSheetID, sheet.NewsItem{
+				Date:    news.PubDate,
+				Subject: news.Title,
+				Keyword: "keyword",
+				URL:     news.Link,
+			})
 		}
 		// 기존 뉴스 목록 갱신 후 저장
 		combinedNews := append(oldNews, newNews...)
