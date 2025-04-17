@@ -1,6 +1,6 @@
 # ubuntu
 #FROM ubuntu:latest
-FROM golang:1.21-bullseye
+FROM golang:1.23-bullseye
 RUN apt-get update
 RUN apt-get upgrade -y
 RUN apt-get install -y build-essential git pkg-config libunistring-dev libaom-dev libdav1d-dev bzip2 nasm wget yasm ca-certificates tzdata

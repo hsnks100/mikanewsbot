@@ -42,11 +42,11 @@ func saveNews(news []NewsItem) {
 func filterNewNews(oldNews, fetchedNews []NewsItem) []NewsItem {
 	oldTitles := make(map[string]bool)
 	for _, news := range oldNews {
-		oldTitles[news.Title] = true
+		oldTitles[news.Link+news.Title] = true
 	}
 	var newNews []NewsItem
 	for _, news := range fetchedNews {
-		if !oldTitles[news.Title] {
+		if !oldTitles[news.Link+news.Title] {
 			newNews = append(newNews, news)
 		}
 	}
@@ -143,7 +143,7 @@ func main() {
 			text := fmt.Sprintf("%s\n%s\n\n%s\n\n<a href=\"%s\">기사 링크</a>",
 				news.PubDate, news.Title, news.Description, news.Link)
 			notifier.SendMessage(text)
-			sheet.InsertNews(newsSpreadSheetID, sheet.NewsItem{
+			sheet.InsertNewsAtomic(newsSpreadSheetID, sheet.NewsItem{
 				Date:    news.PubDate,
 				Subject: news.Title,
 				Keyword: "keyword",

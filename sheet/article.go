@@ -3,10 +3,13 @@ package sheet
 import (
 	"context"
 	"fmt"
+	"time"
 
 	_ "embed"
 
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
+	"google.golang.org/api/sheets/v4"
 	spreadsheet "gopkg.in/Iwark/spreadsheet.v2"
 )
 
@@ -36,9 +39,13 @@ func updateRow(
 	}
 
 	// 비어있는 행 탐색
+	// 총 행의 길이, 어떤 이유로 어떤 포지션이 선택되었는지 로그 자세히...
+	// 해당 위치가 반드시 비어있어야 사용가능한 상태로 해야함
 	for {
 		lastRow := len(sheet.Rows)
+		fmt.Println("last row: ", lastRow)
 		if startRow >= lastRow {
+			fmt.Println("start row is greater than last row")
 			break
 		}
 		if sheet.Rows[startRow][firstColumn].Value == "" {
@@ -69,6 +76,53 @@ type NewsItem struct {
 	URL          string
 }
 
+// InsertNews: 함수 원형 유지
+func InsertNewsAtomic(spreadsheetID string, item NewsItem) error {
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	// 1) 서비스‑계정 자격으로 Sheets 서비스 생성
+	conf, err := google.JWTConfigFromJSON(credentials, sheets.SpreadsheetsScope)
+	if err != nil {
+		return fmt.Errorf("parse credentials: %w", err)
+	}
+	srv, err := sheets.NewService(ctx, option.WithHTTPClient(conf.Client(ctx)))
+	if err != nil {
+		return fmt.Errorf("create sheets service: %w", err)
+	}
+
+	// 2) “첫 번째 시트 탭” 이름 알아오기 (Sheet1 고정이 아닐 수 있으므로)
+	// ss, err := srv.Spreadsheets.Get(spreadsheetID).
+	// 	Fields("sheets.properties").
+	// 	Do()
+	// if err != nil {
+	// 	return fmt.Errorf("get spreadsheet: %w", err)
+	// }
+	// if len(ss.Sheets) == 0 {
+	// 	return fmt.Errorf("spreadsheet has no sheets")
+	// }
+	sheetName := "News" // ss.Sheets[0].Properties.Title // 예: "Sheet1"
+
+	// 3) B, D, F 열(1,3,5 인덱스)에만 값 채우는 행 만들기
+	//    → 맨 왼쪽부터 순서대로 []interface{} 슬라이스 구성
+	row := []interface{}{"", item.Date, "", item.Subject, "", item.URL}
+	vr := &sheets.ValueRange{Values: [][]interface{}{row}}
+
+	// 4) values.append 호출 – 맨 아래 새 행 삽입
+	_, err = srv.Spreadsheets.Values.Append(
+		spreadsheetID,
+		fmt.Sprintf("%s!A1", sheetName), // A1 아무 셀 지정
+		vr).
+		ValueInputOption("USER_ENTERED").
+		InsertDataOption("INSERT_ROWS").
+		Context(ctx).
+		Do()
+	if err != nil {
+		return fmt.Errorf("append row: %w", err)
+	}
+	return nil
+}
 func InsertNews(spreadsheetID string, item NewsItem) error {
 	conf, err := google.JWTConfigFromJSON(credentials, spreadsheet.Scope)
 	if err != nil {
