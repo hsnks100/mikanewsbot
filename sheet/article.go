@@ -106,7 +106,7 @@ func InsertNewsAtomic(spreadsheetID string, item NewsItem) error {
 
 	// 3) B, D, F 열(1,3,5 인덱스)에만 값 채우는 행 만들기
 	//    → 맨 왼쪽부터 순서대로 []interface{} 슬라이스 구성
-	row := []interface{}{"", item.Date, "", item.Subject, "", item.URL}
+	row := []interface{}{nil, item.Date, nil, item.Subject, nil, item.URL}
 	vr := &sheets.ValueRange{Values: [][]interface{}{row}}
 
 	// 4) values.append 호출 – 맨 아래 새 행 삽입
