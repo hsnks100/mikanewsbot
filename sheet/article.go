@@ -93,20 +93,33 @@ func InsertNewsAtomic(spreadsheetID string, item NewsItem) error {
 	}
 
 	// 2) “첫 번째 시트 탭” 이름 알아오기 (Sheet1 고정이 아닐 수 있으므로)
-	// ss, err := srv.Spreadsheets.Get(spreadsheetID).
-	// 	Fields("sheets.properties").
-	// 	Do()
-	// if err != nil {
-	// 	return fmt.Errorf("get spreadsheet: %w", err)
-	// }
+	ss, err := srv.Spreadsheets.Get(spreadsheetID).
+		Fields("sheets.properties").
+		Do()
+	if err != nil {
+		return fmt.Errorf("get spreadsheet: %w", err)
+	}
+	fmt.Println("ss: ", ss.Sheets)
 	// if len(ss.Sheets) == 0 {
 	// 	return fmt.Errorf("spreadsheet has no sheets")
 	// }
 	sheetName := "News" // ss.Sheets[0].Properties.Title // 예: "Sheet1"
 
-	// 3) B, D, F 열(1,3,5 인덱스)에만 값 채우는 행 만들기
-	//    → 맨 왼쪽부터 순서대로 []interface{} 슬라이스 구성
-	row := []interface{}{nil, item.Date, nil, item.Subject, nil, item.URL}
+	// 현재 시트의 행 개수 구하기 (A열 기준)
+	resp, err := srv.Spreadsheets.Values.Get(spreadsheetID, fmt.Sprintf("%s!A:A", sheetName)).Do()
+	if err != nil {
+		return fmt.Errorf("get row count: %w", err)
+	}
+	rowCount := len(resp.Values)
+	rowNumber := rowCount + 1 // 새로 추가될 행 번호 (1-based)
+
+	// C열에 수식 삽입
+	formula := fmt.Sprintf("=INDEX('매체 리스트'!$B$3:$B$3000, MATCH(TRUE,ISNUMBER(SEARCH('매체 리스트'!$C$3:$C$3000, G%d)), 0))", rowNumber)
+	// =HYPERLINK(G1389,E1389)
+	hyper := fmt.Sprintf("=HYPERLINK(G%d,E%d)", rowNumber, rowNumber)
+	// =TEXTJOIN(", ", TRUE, FILTER('키워드 목록'!$B$3:$B$999, ISNUMBER(SEARCH('키워드 목록'!$B$3:$B$999, E1389))))
+	keywordFormular := fmt.Sprintf("=TEXTJOIN(\", \", TRUE, FILTER('키워드 목록'!$B$3:$B$999, ISNUMBER(SEARCH('키워드 목록'!$B$3:$B$999, E%d))))", rowNumber)
+	row := []interface{}{rowNumber - 1, item.Date, formula, hyper, item.Subject, keywordFormular, item.URL}
 	vr := &sheets.ValueRange{Values: [][]interface{}{row}}
 
 	// 4) values.append 호출 – 맨 아래 새 행 삽입
@@ -121,31 +134,5 @@ func InsertNewsAtomic(spreadsheetID string, item NewsItem) error {
 	if err != nil {
 		return fmt.Errorf("append row: %w", err)
 	}
-	return nil
-}
-func InsertNews(spreadsheetID string, item NewsItem) error {
-	conf, err := google.JWTConfigFromJSON(credentials, spreadsheet.Scope)
-	if err != nil {
-		return fmt.Errorf("unable to parse client secret file to config: %v", err)
-	}
-	client := conf.Client(context.TODO())
-
-	service := spreadsheet.NewServiceWithClient(client)
-	spreadsheet, err := service.FetchSpreadsheet(spreadsheetID)
-	if err != nil {
-		return fmt.Errorf("unable to retrieve spreadsheet: %v", err)
-	}
-
-	sheet, err := spreadsheet.SheetByIndex(0)
-	if err != nil {
-		return fmt.Errorf("unable to retrieve sheet: %v", err)
-	}
-
-	updateRow(sheet, 0, map[int]string{
-		1: item.Date,
-		3: item.Subject,
-		5: item.URL,
-	})
-
 	return nil
 }
